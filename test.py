@@ -30,9 +30,9 @@ def main():
         frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
         print "Video Resolution: %d x %d" % (width, height)
         print "There are %d frames from video." % frame_count
-        #Copying Pixels
         S = raw_input("Please select a method to find video transitions:\n A: Copying Pixels\n B: Histogram Differences\n")
         if (S == 'A' or S == 'a'):
+            #Copying Pixels
             STI_column = np.zeros((int(height),int(frame_count),3))
             STI_row = np.zeros((int(width),int(frame_count),3))
             i = 0
@@ -45,6 +45,20 @@ def main():
                 STI_column[:,i] = mid_column
                 STI_row[:,i] = mid_row
                 i=i+1
+        elif (S == 'B' or S == 'b'):
+            histo = np.zeros((int(frame_count),2,int(height)))
+            while True:
+                (rv, im) = cap.read()   # im is a valid image if and only if rv is true
+                if not rv:
+                    break
+                mid_column = im[:,widthMid]
+                for i in range(int(height)):
+                    R,G,B = mid_column[i]
+                    if (R+G+B) != 0:
+                        r,g = (R,G)/(R+G+B)/1.0 # make it float
+                    else:
+                        r,g = 0,0
+                    print str(r) + " " + str(g) + " and the original RGB is: " + str(R) + " " + str(G) + " " + str(B)
         cv2.imwrite('STI_column.png',STI_column)
         cv2.imwrite('STI_row.png',STI_row)
         plt.figure(1)
