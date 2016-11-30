@@ -1,4 +1,5 @@
 import sys
+import os
 import cv2
 import math
 import numpy as np
@@ -14,16 +15,34 @@ def histogram_intersection(h1, h2, bins):
    return sm
 
 def threshold(S,th):
+    if th == 0:
+        return S
     if S>th:
         return 255
     else:
         return 0
 
+def isanumber(a):
+    bool_a = True
+    try:
+        bool_a = float(a)
+    except:
+        bool_a = False
+    return bool_a
+
+def getName(file):
+    index = -1
+    for i in range(len(file)-1,0,-1):
+        if file[i]=='.':
+            index = i
+            break
+    return file[0:index]
 
 def main():
-    Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
+    Tk().withdraw()
     filename = askopenfilename() # show an "Open" dialog box and return the path to the selected file
     print(filename)
+    fname = getName(str(os.path.basename(filename)))
     if len(filename) < 1:
         print "Error - please select a file."
         return
@@ -61,6 +80,20 @@ def main():
                 STI_row[:,i] = mid_row
                 i=i+1
             extra = "CP"
+            cv2.imwrite(fname+'_STI_column_' + extra + '.png',STI_column)
+            cv2.imwrite(fname+'_STI_rown_' + extra + '.png',STI_row)
+            plt.figure(1)
+            plt.imshow(STI_column,cmap="gray")
+            plt.xticks([]), plt.yticks([])
+            plt.title('STI_column')
+
+            plt.figure(2)
+            plt.imshow(STI_row,cmap="gray")
+            plt.xticks([]), plt.yticks([])
+            plt.title('STI_row')
+            plt.show(block=False)
+            cap.release()
+            raw_input("Process complete. Hit any key to exit...")
         elif (S == 'B' or S == 'b'):
             #Histogram differences
             histo = np.zeros((int(frame_count),2,int(height))) #[[x1,x2],[y1,y2]]
@@ -114,42 +147,44 @@ def main():
                     H_row[index][frame], xedges, yedges = np.histogram2d(histX, histY, bins,normed=True )
                 frame = frame + 1
             standard = histogram_intersection(H_column[0][0],H_column[0][0],int(numbins))
-            p = raw_input("Please enter a threshold percentage(0-100, if no data is entered, will use default value 80): ")
-            if (p>=0) and (p<=100):
-                thre = standard * p /100
-            else:
-                p = 80
-                thre = standard * p /100
-            for i in range(int(width)):
-                for j in range(int(frame_count)):
-                    if j == 0:
-                        STI_column[i][j] = threshold(histogram_intersection(H_column[i][j],H_column[i][j],int(numbins)),thre)
-                    else:
-                        STI_column[i][j] = threshold(histogram_intersection(H_column[i][j],H_column[i][j-1],int(numbins)),thre)
-            for i in range(int(height)):
-                for j in range(int(frame_count)):
-                    if j == 0:
-                        STI_row[i][j] = threshold(histogram_intersection(H_row[i][j],H_row[i][j],int(numbins)),thre)
-                    else:
-                        STI_row[i][j] = threshold(histogram_intersection(H_row[i][j],H_row[i][j-1],int(numbins)),thre)
-            extra = "HD_" + str(p)
+            p = raw_input("Please enter a threshold percentage(0-100, suggest 70-95): ")
+            while isanumber(p):
+                p = float(p)
+                if (p>=0) and (p<=100):
+                    thre = standard * p /100
+                else:
+                    print "Invalid number, exiting..."
+                    return
+                for i in range(int(width)):
+                    for j in range(int(frame_count)):
+                        if j == 0:
+                            STI_column[i][j] = threshold(histogram_intersection(H_column[i][j],H_column[i][j],int(numbins)),thre)
+                        else:
+                            STI_column[i][j] = threshold(histogram_intersection(H_column[i][j],H_column[i][j-1],int(numbins)),thre)
+                for i in range(int(height)):
+                    for j in range(int(frame_count)):
+                        if j == 0:
+                            STI_row[i][j] = threshold(histogram_intersection(H_row[i][j],H_row[i][j],int(numbins)),thre)
+                        else:
+                            STI_row[i][j] = threshold(histogram_intersection(H_row[i][j],H_row[i][j-1],int(numbins)),thre)
+                extra = "HD_" + str(p)
+                cv2.imwrite(fname+'_STI_column_' + extra + '.png',STI_column)
+                cv2.imwrite(fname+'_STI_rown_' + extra + '.png',STI_row)
+                plt.figure(1)
+                plt.imshow(STI_column,cmap="gray")
+                plt.xticks([]), plt.yticks([])
+                plt.title('STI_column')
+
+                plt.figure(2)
+                plt.imshow(STI_row,cmap="gray")
+                plt.xticks([]), plt.yticks([])
+                plt.title('STI_row')
+                plt.show(block=False)
+                cap.release()
+                p = raw_input("Process complete. Enter another number between 0-100 to try another threshold. Or Hit any other key to exit...")
         else:
             print "Invalid option, program ending..."
             return
-        cv2.imwrite('STI_column_' + extra + '.png',STI_column)
-        cv2.imwrite('STI_rown_' + extra + '.png',STI_row)
-        plt.figure(1)
-        plt.imshow(STI_column,cmap="gray")
-        plt.xticks([]), plt.yticks([])
-        plt.title('STI_column')
-
-        plt.figure(2)
-        plt.imshow(STI_row,cmap="gray")
-        plt.xticks([]), plt.yticks([])
-        plt.title('STI_row')
-        plt.show(block=False)
-        cap.release()
-        raw_input("Process complete. Hit any key to exit...")
 
 if __name__ == "__main__":
     main()
