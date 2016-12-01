@@ -38,7 +38,16 @@ def getName(file):
             break
     return file[0:index]
 
+def findTrans(matrix):
+    row, column = matrix.shape
+    res = np.array([])
+    for i in range(column):
+        if np.count_nonzero(matrix[:,i])/float(row) < 0.5:
+            res = np.append(res,i)
+    return res
+
 def main():
+    print "Please select a video file(now only support .avi)..."
     Tk().withdraw()
     filename = askopenfilename() # show an "Open" dialog box and return the path to the selected file
     print(filename)
@@ -155,18 +164,20 @@ def main():
                 else:
                     print "Invalid number, exiting..."
                     return
-                for i in range(int(width)):
-                    for j in range(int(frame_count)):
-                        if j == 0:
-                            STI_column[i][j] = threshold(histogram_intersection(H_column[i][j],H_column[i][j],int(numbins)),thre)
-                        else:
-                            STI_column[i][j] = threshold(histogram_intersection(H_column[i][j],H_column[i][j-1],int(numbins)),thre)
                 for i in range(int(height)):
                     for j in range(int(frame_count)):
                         if j == 0:
-                            STI_row[i][j] = threshold(histogram_intersection(H_row[i][j],H_row[i][j],int(numbins)),thre)
+                            STI_column[i][j] = threshold(histogram_intersection(H_row[i][j],H_row[i][j],int(numbins)),thre)
                         else:
-                            STI_row[i][j] = threshold(histogram_intersection(H_row[i][j],H_row[i][j-1],int(numbins)),thre)
+                            STI_column[i][j] = threshold(histogram_intersection(H_row[i][j],H_row[i][j-1],int(numbins)),thre)
+                for i in range(int(width)):
+                    for j in range(int(frame_count)):
+                        if j == 0:
+                            STI_row[i][j] = threshold(histogram_intersection(H_column[i][j],H_column[i][j],int(numbins)),thre)
+                        else:
+                            STI_row[i][j] = threshold(histogram_intersection(H_column[i][j],H_column[i][j-1],int(numbins)),thre)
+                find_column = findTrans(STI_column)
+                find_row = findTrans(STI_row)
                 extra = "HD_" + str(p)
                 cv2.imwrite(fname+'_STI_column_' + extra + '.png',STI_column)
                 cv2.imwrite(fname+'_STI_row_' + extra + '.png',STI_row)
@@ -181,6 +192,12 @@ def main():
                 plt.title('STI_row')
                 plt.show(block=False)
                 cap.release()
+                #if find_column.size != 0:
+                print "Here is the frame which contains the transition from column:"
+                print find_column
+                #if find_row.size != 0:
+                print "Here is the frame which contains the transition from row:"
+                print find_row
                 p = raw_input("Process complete. Enter another number between 0-100 to try another threshold. Or Hit any other key to exit...")
         else:
             print "Invalid option, program ending..."
