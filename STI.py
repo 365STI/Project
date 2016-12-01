@@ -81,7 +81,7 @@ def main():
                 i=i+1
             extra = "CP"
             cv2.imwrite(fname+'_STI_column_' + extra + '.png',STI_column)
-            cv2.imwrite(fname+'_STI_rown_' + extra + '.png',STI_row)
+            cv2.imwrite(fname+'_STI_row_' + extra + '.png',STI_row)
             plt.figure(1)
             plt.imshow(STI_column,cmap="gray")
             plt.xticks([]), plt.yticks([])
@@ -169,7 +169,7 @@ def main():
                             STI_row[i][j] = threshold(histogram_intersection(H_row[i][j],H_row[i][j-1],int(numbins)),thre)
                 extra = "HD_" + str(p)
                 cv2.imwrite(fname+'_STI_column_' + extra + '.png',STI_column)
-                cv2.imwrite(fname+'_STI_rown_' + extra + '.png',STI_row)
+                cv2.imwrite(fname+'_STI_row_' + extra + '.png',STI_row)
                 plt.figure(1)
                 plt.imshow(STI_column,cmap="gray")
                 plt.xticks([]), plt.yticks([])
